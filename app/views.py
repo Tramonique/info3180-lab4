@@ -9,6 +9,16 @@ from app.forms import LoginForm
 from app.forms import UploadForm
 
 
+def get_uploaded_images():
+    folder = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])
+    images = []
+
+    for filename in os.listdir(folder):
+        file_path = os.path.join(folder, filename)
+        if os.path.isfile(file_path):
+            images.append(filename)
+
+    return images
 
 ###
 # Routing for your application.
@@ -102,3 +112,4 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
