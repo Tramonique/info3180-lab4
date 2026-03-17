@@ -54,6 +54,8 @@ def upload():
         file.save(os.path.join(upload_path, filename))
         flash('File Saved', 'success')
         return redirect(url_for('files')) # Update this to redirect the user to a route that displays all uploaded image files
+    
+    flash_errors(form)
 
     return render_template('upload.html',form=form)
 
@@ -81,6 +83,13 @@ def login():
         else:
             flash('Invalid username or password.', 'danger')
     return render_template("login.html", form=form)
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    flash('You have been logged out.', 'success')
+    return redirect(url_for('home'))
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
