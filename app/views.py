@@ -1,6 +1,6 @@
 import os
 from app import app, db, login_manager
-from flask import render_template, request, redirect, url_for, flash, session, abort
+from flask import render_template, request, redirect, url_for, flash, session, abort, send_from_directory
 from flask_login import login_user, logout_user, current_user, login_required
 from werkzeug.utils import secure_filename
 from werkzeug.security import check_password_hash
@@ -23,6 +23,11 @@ def get_uploaded_images():
 ###
 # Routing for your application.
 ###
+
+@app.route('/uploads/<filename>')
+def get_image(filename):
+    upload_folder = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])
+    return send_from_directory(upload_folder, filename)
 
 @app.route('/')
 def home():
@@ -48,9 +53,15 @@ def upload():
         upload_path = os.path.join(os.getcwd(), app.config['UPLOAD_FOLDER'])
         file.save(os.path.join(upload_path, filename))
         flash('File Saved', 'success')
-        return redirect(url_for('home')) # Update this to redirect the user to a route that displays all uploaded image files
+        return redirect(url_for('files')) # Update this to redirect the user to a route that displays all uploaded image files
 
     return render_template('upload.html',form=form)
+
+@app.route('/files')
+@login_required
+def files():
+    images = get_uploaded_images()
+    return render_template('files.html', images=images)
 
 
 @app.route('/login', methods=['POST', 'GET'])
@@ -70,25 +81,6 @@ def login():
         else:
             flash('Invalid username or password.', 'danger')
     return render_template("login.html", form=form)
-
-# user_loader callback. This callback is used to reload the user object from
-# the user ID stored in the session
-@login_manager.user_loader
-def load_user(id):
-    return db.session.execute(db.select(UserProfile).filter_by(id=id)).scalar()
-
-###
-# The functions below should be applicable to all Flask apps.
-###
-
-# Flash errors from the form if validation fails
-def flash_errors(form):
-    for field, errors in form.errors.items():
-        for error in errors:
-            flash(u"Error in the %s field - %s" % (
-                getattr(form, field).label.text,
-                error
-), 'danger')
 
 @app.route('/<file_name>.txt')
 def send_text_file(file_name):
@@ -112,4 +104,25 @@ def add_header(response):
 def page_not_found(error):
     """Custom 404 page."""
     return render_template('404.html'), 404
+
+
+# user_loader callback. This callback is used to reload the user object from
+# the user ID stored in the session
+@login_manager.user_loader
+def load_user(id):
+    return db.session.execute(db.select(UserProfile).filter_by(id=id)).scalar()
+
+###
+# The functions below should be applicable to all Flask apps.
+###
+
+# Flash errors from the form if validation fails
+def flash_errors(form):
+    for field, errors in form.errors.items():
+        for error in errors:
+            flash(u"Error in the %s field - %s" % (
+                getattr(form, field).label.text,
+                error
+), 'danger')
+
 
